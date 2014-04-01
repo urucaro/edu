@@ -10,7 +10,7 @@ print (sys.path)
 print(__file__)
 
 def my_func (a):
-    result = a + 2
+    result = a + 26
     return result
     
 b = my_func (5)
