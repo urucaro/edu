@@ -15,7 +15,6 @@ def my_func (a):
     
 b = my_func (5)
 
-print (b)
-
+print "b"
 
 
