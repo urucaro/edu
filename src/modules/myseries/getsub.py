@@ -15,9 +15,12 @@ req = urllib2.Request(page,  headers ={'User-Agent' : 'Mozilla 5.10', 'Referer' 
 
 print req 
 #req.add_header('Referer', referer)
-response = urllib2.urlopen(req)
+response = urllib2.urlopen (req)
 
 data = response.read()
+
+test = response.info()
+print test
 
 print response.info()
 

@@ -6,7 +6,7 @@ import urllib
 from bs4 import BeautifulSoup
 #import itertools
 from pprint import *
-import os
+import os   
 
 
 
@@ -26,7 +26,7 @@ def series ():
 #    for option in options:
 #        vs.append (option ['value'])
 #        print option
-    values = [(o ['value'], list (o.stripped_strings) [0] ) for o in options][1:10] #the first is just...
+    values = [(o ['value'], list (o.stripped_strings) [0] ) for o in options][1:] #the first is just...
    # ...the default "select a show" and therefor omitted
 #    result = list (select.stripped_strings)#Picks out the strings in "select"
 #    options = soup.find(id="qsShow").find_all('option') #Finds all the tags
@@ -46,17 +46,18 @@ def episodes (sid,  sea):
     url = season_url_format % (domain, sid,  sea)
     resp = urllib2.urlopen (url)
     html = resp.read (resp)
-    soup = BeautifulSoup (html, from_encoding = 'utf-8')
+    soup = BeautifulSoup (html,  from_encoding = 'utf-8')
     select = soup.find (id = 'qsiEp')
     ep_id = list (select.stripped_strings)[1:]
     return ep_id
     
 def transform (serie_name,  episode_list, season_nr):
     new_episode_list = {}
+    serie_name = serie_name.encode('utf-8').replace(' ', '_')
     for episode in episode_list:
         episode_nr = episode.split('.', 1) [0]
-        episode_name = episode.split('.', 1) [1].strip().encode('utf-8')
-
+        episode_name = episode.split('.', 1) [1].strip().encode('utf-8').replace (' ', '_')
+        
         url_epname = urllib.quote (episode_name)
         url_seriename = urllib.quote (serie_name)
         
@@ -80,7 +81,6 @@ for serie in all_series:
     for season in all_serie_seasons:
         all_season_episodes = episodes (serie [0],  season)
         db [serie[0]]['seasons'] [season] = all_season_episodes
-        print
 
 
 
@@ -91,7 +91,6 @@ for key, value in db.iteritems(): # iterates through the db and takes one of the
     serie_name = value ['title']
     for k, v in serie_seasons.iteritems():
         v_new = transform(serie_name, v, k)
-        pprint (v)
         serie_seasons [k] = v_new
 
     with file (p ,  "w+")  as f: #names the files with the showID number
