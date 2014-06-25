@@ -4,10 +4,14 @@
 import urllib2
 import urllib
 from bs4 import BeautifulSoup
-#import itertools
 from pprint import *
-import os   
+import os 
+import myseries
 
+path = os.path.dirname(os.path.realpath(__file__))
+prefix = os.path.dirname(path)
+env_obj = myseries.Environment (prefix)
+db_dir = env_obj.series_dir
 
 
 domain ="http://www.addic7ed.com"
@@ -83,10 +87,8 @@ for serie in all_series:
         db [serie[0]]['seasons'] [season] = all_season_episodes
 
 
-
-path = ('/home/carolina/proj/edu/data/addic7ed')
 for key, value in db.iteritems(): # iterates through the db and takes one of the series 
-    p = os.path.join (path, "%s.py" % key )
+    p = os.db_dir.join (db_dir, "%s.py" % key )
     serie_seasons = value ['seasons']
     serie_name = value ['title']
     for k, v in serie_seasons.iteritems():

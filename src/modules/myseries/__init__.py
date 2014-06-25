@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-*- coding:  utf8 -*-
-import os,  pprint, argparse,  sys,  urllib2
+import os, argparse,  sys,  urllib2,  urlparse
 from bs4 import BeautifulSoup
 
 def create_dir (p):
@@ -13,8 +13,9 @@ class Environment (object):
         """Create an environment based on the prefix 'p'"""
         assert os.path.isdir (p)
         self.prefix = p
-        self.series_dir = create_dir (os.path.join (p,  'series'))
-        self.subs_dir = create_dir (os.path.join (p,  'subs'))
+        self.series_dir = os.path.join (p, 'data', 'series')
+        self.subs_dir = os.path.join (p, 'data',  'subs')
+
 
 class SeriesDatabase (object):
     """Database holding information about series, seasons and episodes"""
@@ -28,11 +29,31 @@ class SeriesDatabase (object):
         """The path to the file (serie) with filename 'id' """
         fn = os.path.join(self.basepath, '%s.py' % id)
         return fn
+        
+    def series (self):
+        """A dictionary with all serie's titles with id's as keys"""
+        allseries = {}
+        ids = self.ids()
+        for id in ids:
+            data = self.serie_data (id)
+            allseries[id] = data['title']
+        return allseries
+        
 
     def ids (self):
         """List of all serie's identitys"""
         fns = os.listdir (self.basepath)
-        return [fn.split('.')[0] for fn in fns if fn.split('.')[1]  == 'py' ]
+        p =[os.path.splitext(fn)[0] for fn in fns if os.path.splitext(fn)[1]  == '.py' ]
+        return p
+        
+    def series_titles (self):
+        """list with all the series"""
+        titles = []
+        ids = self.ids()
+        for id in ids:
+            data = self.serie_data (id)
+            titles.append (data['title'])
+        return titles
 
     def has (self,  id):
         """Is there a serie with identity 'id' in the database"""
@@ -64,12 +85,12 @@ class SeriesDatabase (object):
         return episode_obj
         
     def show_details(self):
-        print self.basepath
+        return self.basepath
 
 class Serie (object):
     """The series title, its seasons, episodes, episodes names etc."""
     def __init__(self, db_obj, id):
-        assert db_obj.has (id)
+        assert db_obj.has (id),  'There is no serie with that id'
         self.db = db_obj
         self.id = id
         self.data = db_obj.serie_data (id)
@@ -90,7 +111,7 @@ class Serie (object):
         if not self.sorted_season_numbers:#För att det bara skall göras en gång
             seasons = self.data ['seasons']
             season_nrs = seasons.keys ()
-            season_nrs.sort ()
+            season_nrs.sort(key = lambda x: int(x))
             self.sorted_season_numbers = season_nrs
         return self.sorted_season_numbers 
 
@@ -111,11 +132,10 @@ class Serie (object):
 
     def show_details(self):
         """SHows the deails of the serie such as title,id nr and the titles of all the episodes"""
-        print 'The series title is "%s" and its id nr is %s'% (self.title,  self.id)
-        print 'It contains %s seasons' % len(self.season_nrs ())
-        print 'The episodes in the serie are:'
-        pprint.pprint ((self.episodes()))
-        
+        title = 'The series title is "%s" and its id nr is %s'% (self.title,  self.id)
+        seasons ='It contains %s seasons' % len(self.season_nrs ())
+        episodes ='The episodes in the serie are:'
+        return title,  seasons,  episodes,  self.episodes        
         
 
 
@@ -126,6 +146,7 @@ class Season (object):
         assert serie_obj.has (season_id)
         self.id = season_id
         self.serie_obj = serie_obj
+        self.serie_title = serie_obj.title
         self.db = self.serie_obj.db
         self.data = serie_obj.seasons[season_id]
         self.sorted_ep_nrs = None # lazy access
@@ -258,6 +279,10 @@ if __name__=='__main__':#gör att det bara körs om det är huvudprogrammet
     def test():
         prefix = '/home/carolina/proj/edu/data'
         db = SeriesDatabase (prefix)
+        p = db.show_details()
+        o = db.serie_data (78)
+        q = db.series_titles()
+        print p
 
 
     parser = argparse.ArgumentParser('Get serie, season or episode data from a database') 
@@ -272,7 +297,7 @@ if __name__=='__main__':#gör att det bara körs om det är huvudprogrammet
     if args.prefix:
         database = SeriesDatabase(args.prefix)
     elif not args.prefix and args.todo == 'test':
-        print 'jättebra'        
+        test()        
     elif not args.prefix or args.todo:
         parser.error ('You have to give the path to the database') 
 
